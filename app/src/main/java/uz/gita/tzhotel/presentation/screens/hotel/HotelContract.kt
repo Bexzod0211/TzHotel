@@ -5,11 +5,12 @@ import uz.gita.tzhotel.data.network.response.HotelDataResponse
 
 interface HotelContract {
     data class UiState(
-        val hotelInfo:HotelDataResponse? = null
+        val hotelInfo:HotelDataResponse? = null,
+        val isLoading:Boolean = false
     )
 
     sealed interface Intent {
-        object SelectNumberClicked: Intent
+        data class SelectNumberClicked(val hotelName:String): Intent
     }
 
     interface ViewModel {
@@ -22,7 +23,7 @@ interface HotelContract {
     }
 
     interface Direction {
-        suspend fun openNumberScreen()
+        suspend fun openNumberScreen(name:String)
     }
 
 }

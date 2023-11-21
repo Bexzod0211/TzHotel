@@ -6,6 +6,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import uz.gita.tzhotel.R
 
@@ -25,12 +26,35 @@ val Typography = Typography(
         fontWeight = FontWeight.W400,
         lineHeight = 19.2.sp
     ),
+    displaySmall = TextStyle(
+        color = Color.Black,
+        fontSize = 30.sp,
+        fontFamily = FontFamily(Font(R.font.sfprodisplaybold)),
+        fontWeight = FontWeight.W600,
+        lineHeight = 36.sp
+    ),
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
+        color = Color.Black,
+        fontSize = 18.sp,
+        fontFamily = FontFamily(Font(R.font.sfprodisplaymedium)),
+        fontWeight = FontWeight.W500,
+        lineHeight = 21.60.sp,
+        textAlign = TextAlign.Center
+    ),
+    bodyMedium =  TextStyle(
+        color = HadFieldBlue,
+        fontSize = 14.sp,
+        fontFamily = FontFamily(Font(R.font.sfprodisplaymedium)),
+        fontWeight = FontWeight.W500,
+        lineHeight = 16.8.sp
+    ),
+    bodySmall = TextStyle(
+        color = JacarandaLight,
+        fontSize = 12.sp,
+        fontFamily = FontFamily(Font(R.font.sfprodisplayregular)),
+        fontWeight = FontWeight.W400,
+        lineHeight = 14.4.sp,
+        letterSpacing = 0.12.sp
     )
     /* Other default text styles to override
     titleLarge = TextStyle(

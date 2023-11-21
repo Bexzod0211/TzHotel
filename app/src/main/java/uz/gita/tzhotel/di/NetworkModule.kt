@@ -11,6 +11,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import uz.gita.tzhotel.data.network.api.BaseApi
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
@@ -22,6 +23,8 @@ class NetworkModule {
     fun provideClient(
         @ApplicationContext context:Context
     ):OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(3,TimeUnit.MINUTES)
+        .readTimeout(3,TimeUnit.MINUTES)
         .addInterceptor(ChuckerInterceptor.Builder(context).build()).build()
 
     @[Provides Singleton]

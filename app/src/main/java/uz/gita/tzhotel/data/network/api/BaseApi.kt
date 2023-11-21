@@ -2,6 +2,7 @@ package uz.gita.tzhotel.data.network.api
 
 import retrofit2.Response
 import retrofit2.http.GET
+import uz.gita.tzhotel.data.network.response.OrderResponse
 import uz.gita.tzhotel.data.network.response.HotelDataResponse
 import uz.gita.tzhotel.data.network.response.RoomsResponse
 
@@ -11,5 +12,8 @@ interface BaseApi {
     suspend fun getHotelInfo():Response<HotelDataResponse>
 
     @GET("8b532701-709e-4194-a41c-1a903af00195")
-    fun getRoomsList():Response<RoomsResponse>
+    suspend fun getRoomsList():Response<RoomsResponse>
+
+    @GET("63866c74-d593-432c-af8e-f279d1a8d2ff")
+    suspend fun getNumberInfo():Response<OrderResponse>
 }

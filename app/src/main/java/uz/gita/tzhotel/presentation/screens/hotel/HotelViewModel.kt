@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import uz.gita.tzhotel.domain.usecase.HotelUseCase
 import uz.gita.tzhotel.utils.myLog
 import javax.inject.Inject
@@ -19,16 +20,22 @@ class HotelViewModel @Inject constructor(
     override val uiState = MutableStateFlow(HotelContract.UiState())
 
     init {
-        myLog("init")
+//        myLog("init")
         loadData()
     }
 
     private fun loadData() {
+        uiState.update {
+            HotelContract.UiState(isLoading = true)
+        }
         useCase.getHotelInfo()
             .onEach { result ->
                 result.onSuccess {request->
                     uiState.update {
-                        HotelContract.UiState(hotelInfo = request)
+                        HotelContract.UiState(
+                            hotelInfo = request,
+                            isLoading = false
+                        )
                     }
                 }
                 result.onFailure {
@@ -42,8 +49,11 @@ class HotelViewModel @Inject constructor(
 
     override fun onEventDispatcher(intent: HotelContract.Intent) {
         when (intent) {
-            HotelContract.Intent.SelectNumberClicked -> {
-
+            is HotelContract.Intent.SelectNumberClicked -> {
+                viewModelScope.launch {
+                    myLog("HotelViewModel onClick")
+                    direction.openNumberScreen(intent.hotelName)
+                }
             }
         }
     }

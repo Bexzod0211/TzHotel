@@ -7,14 +7,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -49,12 +53,18 @@ import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.androidx.AndroidScreen
 import cafe.adriel.voyager.hilt.getViewModel
 import uz.gita.tzhotel.R
+import uz.gita.tzhotel.data.models.PaymentInfoData
+import uz.gita.tzhotel.presentation.screens.numbers.BlueButton
 import uz.gita.tzhotel.ui.theme.ChromeYellow
+import uz.gita.tzhotel.ui.theme.ErrorColor
 import uz.gita.tzhotel.ui.theme.FreezeUp
 import uz.gita.tzhotel.ui.theme.GramsHair
+import uz.gita.tzhotel.ui.theme.HadFieldBlue
+import uz.gita.tzhotel.ui.theme.JacarandaLight
 import uz.gita.tzhotel.ui.theme.PureLaughter
 import uz.gita.tzhotel.ui.theme.Sambucus
 import uz.gita.tzhotel.ui.theme.Typography
+import uz.gita.tzhotel.utils.myLog
 
 class OrderScreen : AndroidScreen() {
     @Composable
@@ -65,7 +75,6 @@ class OrderScreen : AndroidScreen() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScreenContent(
     uiState: State<BookContract.UiState>,
@@ -81,7 +90,10 @@ private fun ScreenContent(
         OrderInfoData(text1 = "Номер", text2 = "${orderInfo?.room}"),
         OrderInfoData(text1 = "Питание", text2 = "${orderInfo?.nutrition}"),
     )
-    var phoneNumber = remember {
+
+    val valueList = mutableListOf<String>()
+
+    var phoneNumber by remember {
         mutableStateOf("")
     }
 
@@ -95,13 +107,35 @@ private fun ScreenContent(
     var isFirstTouristOpened by remember {
         mutableStateOf(true)
     }
+    var isSecondTouristOpened by remember {
+        mutableStateOf(false)
+    }
 
 
     var values = mutableListOf(
         mutableListOf(
             remember {
-            mutableStateOf("")
-        },
+                mutableStateOf("")
+            },
+            remember {
+                mutableStateOf("")
+            },
+            remember {
+                mutableStateOf("")
+            },
+            remember {
+                mutableStateOf("")
+            },
+            remember {
+                mutableStateOf("")
+            },
+            remember {
+                mutableStateOf("")
+            }),
+        mutableListOf(
+            remember {
+                mutableStateOf("")
+            },
             remember {
                 mutableStateOf("")
             },
@@ -130,189 +164,210 @@ private fun ScreenContent(
 
         )
 
-    val onValueChanges = mutableListOf<MutableList<onValueChange>>(
-        mutableListOf(
-            {
-                values[0][0].value = it
-            },
-            {
-                values[0][1].value = it
-            },
-            {
-                values[0][2].value = it
-            },
-            {
-                values[0][3].value = it
-            },
-            {
-                values[0][4].value = it
-            },
-            {
-                values[0][5].value = it
+    val onValueChanges = mutableListOf<MutableList<onValueChange>>()
+
+    val onValueChange2:()->Unit = {
+        valueList.add(phoneNumber)
+        valueList.add(email.value)
+
+        values.forEach {
+            it.forEach {
+                valueList.add(it.value)
             }
-        )
+        }
+
+        onEventDispatcher.invoke(BookContract.Intent.BlueButtonClicked(list = valueList, isButtonClicked = false))
+
+        valueList.clear()
+    }
+    for (i in 0 until 2){
+        val list = mutableListOf<onValueChange>()
+        for (j in 0 until 6){
+            list.add {
+                values[i][j].value = it
+                onValueChange2.invoke()
+            }
+        }
+
+        onValueChanges.add(list)
+    }
+
+    myLog("${onValueChanges.size}")
+    var total = 0
+
+    orderInfo?.let {
+
+        if (!uiState.value.isLoading) {
+            total = it.tour_price + it.fuel_charge + it.service_charge
+        }
+    }
+
+    val paymentInfoList = mutableListOf(
+        PaymentInfoData(paymentType = "Тур", price = "${orderInfo?.tour_price} ₽"),
+        PaymentInfoData(paymentType = "Топливный сбор", price = "${orderInfo?.fuel_charge} ₽"),
+        PaymentInfoData(paymentType = "Сервисный сбор", price = "${orderInfo?.service_charge}  ₽"),
+        PaymentInfoData(paymentType = "К оплате", price = "$total ₽"),
     )
+
+
 
 
 
 
     LazyColumn {
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_back),
-                    contentDescription = "back",
+            AppBar(title = "Бронирование") {
+                onEventDispatcher.invoke(BookContract.Intent.BackButtonClicked)
+            }
+        }
+        if (uiState.value.isLoading) {
+            item {
+                Box(
                     modifier = Modifier
-                        .padding(start = 16.dp)
-                        .size(20.dp)
-                        .clickable {
-                            onEventDispatcher.invoke(BookContract.Intent.BackButtonClicked)
-                        }
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        } else {
+            item {
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .padding(
+                            start = 16.dp,
+                            top = 16.dp
+                        )
+                        .background(
+                            color = PureLaughter,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(
+                            start = 12.dp,
+                            end = 12.dp,
+                            top = 4.dp,
+                            bottom = 4.dp
+                        )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_star),
+                            contentDescription = "star",
+                            modifier = Modifier
+                                .size(15.dp)
+                        )
+
+                        Text(
+                            text = "${orderInfo?.horating} ${orderInfo?.rating_name}",
+                            style = TextStyle(
+                                color = ChromeYellow,
+                                fontSize = 16.sp,
+                                fontFamily = FontFamily(Font(R.font.sfprodisplaymedium)),
+                                fontWeight = FontWeight.W500,
+                                lineHeight = 19.2.sp
+                            )
+                        )
+                    }
+                }
+
+                Text(
+                    text = "${orderInfo?.hotel_name}",
+                    style = Typography
+                        .displayLarge,
+                    modifier = Modifier
+                        .padding(
+                            start = 16.dp,
+                            top = 8.dp
+                        )
                 )
 
                 Text(
-                    text = "Бронирование",
-                    modifier = Modifier
-                        .weight(1f),
+                    text = "${orderInfo?.hotel_adress}",
                     style = Typography
-                        .bodyLarge,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(
+                        .bodyMedium,
                     modifier = Modifier
-                        .size(52.dp)
-                )
-            }
-        }
-
-        item {
-            Divider(
-                thickness = 4.dp,
-                color = GramsHair,
-                modifier = Modifier
-                    .padding(top = 12.dp)
-            )
-
-            Box(
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 16.dp
-                    )
-                    .background(
-                        color = PureLaughter,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        top = 4.dp,
-                        bottom = 4.dp
-                    )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_star),
-                        contentDescription = "star",
-                        modifier = Modifier
-                            .size(15.dp)
-                    )
-
-                    Text(
-                        text = "${uiState.value.orderInfo?.horating} ${uiState.value.orderInfo?.rating_name}",
-                        style = TextStyle(
-                            color = ChromeYellow,
-                            fontSize = 16.sp,
-                            fontFamily = FontFamily(Font(R.font.sfprodisplaymedium)),
-                            fontWeight = FontWeight.W500,
-                            lineHeight = 19.2.sp
+                        .padding(
+                            start = 16.dp,
+                            top = 4.dp
                         )
-                    )
-                }
+                )
+
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+
+
             }
 
-            Text(
-                text = "${uiState.value.orderInfo?.hotel_name}",
-                style = Typography
-                    .displayLarge,
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 8.dp
-                    )
-            )
 
-            Text(
-                text = "${uiState.value.orderInfo?.hotel_adress}",
-                style = Typography
-                    .bodyMedium,
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 4.dp
-                    )
-            )
+            items(orderInfoList) {
+                OrderInfoItem(data = it)
+            }
 
-            Divider(
-                thickness = 4.dp,
-                color = GramsHair,
-                modifier = Modifier
-                    .padding(top = 12.dp)
-            )
+            item {
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+                Text(
+                    text = "Информация о покупателе",
+                    style = Typography
+                        .displayLarge,
+                    modifier = Modifier
+                        .padding(
+                            start = 16.dp,
+                            top = 16.dp
+                        )
+
+                )
 
 
-        }
+                CustomTextField(
+                    boxModifier = Modifier
+                        .padding(
+                            top = 16.dp
+                        ),
+                    modifier = Modifier
+                        .onFocusChanged {
+                            isFocused = it.isFocused
+                        }
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    value = if (isFocused) phoneNumber else {
+                        var arr = phoneNumber.toCharArray()
 
 
-        items(orderInfoList) {
-            OrderInfoItem(data = it)
-        }
-
-        item {
-            Divider(
-                thickness = 4.dp,
-                color = GramsHair,
-                modifier = Modifier
-                    .padding(top = 12.dp)
-            )
-            Text(
-                text = "Информация о покупателе",
-                style = Typography
-                    .displayLarge,
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        top = 16.dp
-                    )
-
-            )
-
-
-            CustomTextField(
-                boxModifier = Modifier
-                    .padding(
-                        top = 16.dp
-                    ),
-                modifier = Modifier
-                    .onFocusChanged {
-                        isFocused = it.isFocused
-                    }
-                    .fillMaxWidth()
-                    .height(60.dp),
-                value = phoneNumber,
-                onValueChange = {
-                    if (it.length >= 10)
-                        phoneNumber.value = it.substring(0, 10)
-                    else phoneNumber.value = it
-                    /*var arr = it.toCharArray()
+                        var lastDigit = phoneNumber.lastIndexOfAny(CharArray(10) {
+                            "$it"[0]
+                        })
+//                      +7 (***) ***-**-**
+                        var phone = "+7 (***) ***-**-**"
+                        for (i in 0..lastDigit) {
+                            if (arr[i].isDigit()) {
+                                phone = phone.replaceFirst("*", "${arr[i]}")
+                            }
+                        }
+                                                            if (phoneNumber.isEmpty()) "" else phone
+                                                            },
+                    onValueChange = {
+                        if (it.length >= 10)
+                            phoneNumber = it.substring(0, 10)
+                        else phoneNumber = it
+                        /*var arr = it.toCharArray()
 
 
                     var lastDigit = it.lastIndexOfAny(CharArray(10) {
@@ -326,203 +381,320 @@ private fun ScreenContent(
                         }
                     }
 //                        myLog("old:$phoneNumber - new:$it")
-                    myLog("compareTo ${it.compareTo(phoneNumber.value)}")
+                    myLog("compareTo ${it.compareTo(phoneNumber)}")
 
-                    if (it.length < phoneNumber.value.length){
+                    if (it.length < phoneNumber.length){
 
                     }
 
                     var lastChar = Char(0)
-                    myLog("${phoneNumber.value} : ${it}")
+                    myLog("${phoneNumber} : ${it}")
 
 
 
                         for (i in it.indices){
-                            if (phoneNumber.value.length-1>=i) {
-                                if ("${phoneNumber.value[i]}" != "${it[i]}") {
-                                    myLog("${phoneNumber.value[i]} : ${it[i]}")
+                            if (phoneNumber.length-1>=i) {
+                                if ("${phoneNumber[i]}" != "${it[i]}") {
+                                    myLog("${phoneNumber[i]} : ${it[i]}")
                                     lastChar = it[i]
                                     break
                                 }
                             }
                         }
                         if (lastChar.isDigit()){
-                            phoneNumber.value = phoneNumber.value.replaceFirst("*","$lastChar")
+                            phoneNumber = phoneNumber.replaceFirst("*","$lastChar")
                         }*/
 
-                },
-                label = "Номер телефона",
-                keyboardType = KeyboardType.Phone,
-                visualTransformation = if (isFocused) {
-                    {
-                        mobileNumberFilter(it)
-                    }
-                } else {
-                    {
-                        TransformedText(it, OffsetMapping.Identity)
-                    }
-                },
-
-                )
-
-            CustomTextField(
-                value = email,
-                onValueChange = {
-                    email.value = it
-                },
-                modifier = Modifier
-                    .fillMaxWidth(),
-                boxModifier = Modifier
-                    .padding(
-                        top = 4.dp
-                    ),
-                label = "Почта",
-                keyboardType = KeyboardType.Email
-            )
-
-            Text(
-                text = "Эти данные никому не передаются. После оплаты мы вышлем чек на указанный вами номер и почту",
-                style = Typography
-                    .displayMedium
-                    .copy(
-                        fontSize = 14.sp,
-                        lineHeight = 16.8.sp,
-                        fontWeight = FontWeight.W400
-                    ),
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 4.dp
+                    },
+                    label = "Номер телефона",
+                    keyboardType = KeyboardType.Phone,
+                    visualTransformation = if (isFocused) {
+                        {
+                            mobileNumberFilter(it)
+                        }
+                    } else {
+                        {
+                            TransformedText(it, OffsetMapping.Identity)
+                        }
+                    },
+                    isError = uiState.value.errorList?.get(0)?.value?:false
                     )
-            )
 
-            Divider(
-                thickness = 4.dp,
-                color = GramsHair,
-                modifier = Modifier
-                    .padding(top = 12.dp)
-            )
-
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 4.dp
-                    )
-                    .height(60.dp)
-                    .fillMaxWidth()
-                    .clickable {
-                        isFirstTouristOpened = !isFirstTouristOpened
-                    }
-            ) {
-                Text(
-                    text = "Первый турист",
-                    style = Typography
-                        .displayLarge
-                )
-
-                Box(
+                CustomTextField(
+                    value = email.value,
+                    onValueChange = {
+                        email.value = it
+                        onValueChange2.invoke()
+                    },
                     modifier = Modifier
-                        .size(30.dp)
-                        .background(
-                            color = FreezeUp,
-                            shape = RoundedCornerShape(4.dp)
+                        .fillMaxWidth(),
+                    boxModifier = Modifier
+                        .padding(
+                            top = 4.dp
                         ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(id = if (isFirstTouristOpened) R.drawable.ic_closed else R.drawable.ic_opened),
-                        contentDescription = "button",
-                        modifier = Modifier
-                            .size(18.dp)
-                    )
-                }
-            }
-            if (isFirstTouristOpened) {
-                for (i in 0 until 6){
-                    TouristInfo(list = listOf(
-                        TouristInfoData(value = values[0][i], onValueChange = onValueChanges[0][i], isError = uiState.value.errorList?.get(i) ?: remember {
-                            mutableStateOf(false)
-                        },
-                            label = labels[i])
-
-                    ))
-                }
-            }
-
-            Divider(
-                thickness = 4.dp,
-                color = GramsHair,
-                modifier = Modifier
-                    .padding(top = 12.dp)
-            )
-
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .padding(
-                        horizontal = 16.dp,
-                        vertical = 4.dp
-                    )
-                    .height(60.dp)
-                    .fillMaxWidth()
-                    .clickable {
-                        isFirstTouristOpened = !isFirstTouristOpened
-                    }
-            ) {
-                Text(
-                    text = "Первый турист",
-                    style = Typography
-                        .displayLarge
+                    label = "Почта",
+                    keyboardType = KeyboardType.Email,
+                    isError = uiState.value.errorList?.get(1)?.value?:false
                 )
 
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(
-                            color = FreezeUp,
-                            shape = RoundedCornerShape(4.dp)
+                Text(
+                    text = "Эти данные никому не передаются. После оплаты мы вышлем чек на указанный вами номер и почту",
+                    style = Typography
+                        .displayMedium
+                        .copy(
+                            fontSize = 14.sp,
+                            lineHeight = 16.8.sp,
+                            fontWeight = FontWeight.W400
                         ),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier
+                        .padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = 4.dp
+                        )
+                )
+
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 4.dp
+                        )
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .clickable {
+                            isFirstTouristOpened = !isFirstTouristOpened
+                        }
                 ) {
-                    Icon(
-                        painter = painterResource(id = if (isFirstTouristOpened) R.drawable.ic_closed else R.drawable.ic_opened),
-                        contentDescription = "button",
-                        modifier = Modifier
-                            .size(18.dp)
+                    Text(
+                        text = "Первый турист",
+                        style = Typography
+                            .displayLarge
                     )
+
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(
+                                color = FreezeUp,
+                                shape = RoundedCornerShape(4.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = if (isFirstTouristOpened) R.drawable.ic_opened else R.drawable.ic_closed),
+                            contentDescription = "button",
+                            modifier = Modifier
+                                .size(16.dp)
+                        )
+                    }
                 }
+                if (isFirstTouristOpened) {
+                    for (i in 0 until 6) {
+                        TouristInfo(
+                            list = listOf(
+                                TouristInfoData(
+                                    value = values[0][i],
+                                    onValueChange = onValueChanges[0][i],
+                                    isError = uiState.value.errorList?.get(i+2)?.value?:false,
+                                    label = labels[i]
+                                )
+
+                            )
+                        )
+                    }
+                }
+
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 4.dp
+                        )
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .clickable {
+                            isSecondTouristOpened = !isSecondTouristOpened
+                        }
+                ) {
+                    Text(
+                        text = "Второй турист",
+                        style = Typography
+                            .displayLarge
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(
+                                color = FreezeUp,
+                                shape = RoundedCornerShape(4.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = if (isSecondTouristOpened) R.drawable.ic_opened else R.drawable.ic_closed),
+                            contentDescription = "button",
+                            modifier = Modifier
+                                .size(16.dp)
+                        )
+                    }
+                }
+
+
+                if (isSecondTouristOpened) {
+                    myLog("${uiState.value.errorList?.size}")
+                    for (i in 0 until 6) {
+                        TouristInfo(
+                            list = listOf(
+                                TouristInfoData(
+                                    value = values[1][i],
+                                    onValueChange = onValueChanges[1][i],
+                                    isError =uiState.value.errorList?.get(i+8)?.value?:false,
+                                    label = labels[i]
+                                )
+
+                            )
+                        )
+                    }
+                }
+
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .padding(
+                            horizontal = 16.dp,
+                            vertical = 4.dp
+                        )
+                        .height(60.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Добавить туриста",
+                        style = Typography
+                            .displayLarge
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(
+                                color = HadFieldBlue,
+                                shape = RoundedCornerShape(4.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_add),
+                            contentDescription = "button",
+                            modifier = Modifier
+                                .size(16.dp),
+                            colorFilter = ColorFilter.tint(color = Color.White)
+                        )
+                    }
+                }
+
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+
+            }
+
+            itemsIndexed(paymentInfoList) { index, item ->
+                PaymentInfoItem(
+                    paymentType = item.paymentType,
+                    price = item.price,
+                    priceColor = if (index != 3) Color.Black else HadFieldBlue,
+                    priceFontWeight = if (index != 3) FontWeight.W400 else FontWeight.W600
+                )
+            }
+
+            item {
+                Divider(
+                    thickness = 4.dp,
+                    color = GramsHair,
+                    modifier = Modifier
+                        .padding(top = 12.dp)
+                )
+
+                BlueButton(
+                    text = "Оплатить $total ₽",
+                    modifier = Modifier
+                        .padding(
+                            top = 16.dp,
+                            bottom = 20.dp
+                        ),
+                    onClick = {
+                        val list = mutableListOf<String>()
+                        list.add(phoneNumber)
+                        list.add(email.value)
+
+                        values.forEach {
+                            it.forEach {
+                                list.add(it.value)
+                            }
+                        }
+
+                        onEventDispatcher.invoke(BookContract.Intent.BlueButtonClicked(list = list, isButtonClicked = true))
+                    },
+                    infoIsLoading = uiState.value.infoIsLoading
+                )
             }
 
         }
 
-
     }
-
 }
 
-typealias onValueChange = (String)->Unit
+typealias onValueChange = (String) -> Unit
 
 @Composable
 private fun TouristInfo(
-    list:List<TouristInfoData>
+    list: List<TouristInfoData>,
 ) {
 
 
     list.forEach {
         CustomTextField(
-            value = it.value,
+            value = it.value.value,
             onValueChange = it.onValueChange,
             modifier = Modifier,
             boxModifier = Modifier.padding(top = 4.dp),
             label = it.label,
-            keyboardType = KeyboardType.Text
+            keyboardType = KeyboardType.Text,
+            isError = it.isError
         )
     }
 }
@@ -531,7 +703,7 @@ private fun TouristInfo(
 data class TouristInfoData(
     val value: State<String>,
     val onValueChange: (String) -> Unit,
-    val isError: State<Boolean>,
+    val isError: Boolean,
     val label: String,
 )
 
@@ -539,7 +711,7 @@ data class TouristInfoData(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CustomTextField(
-    value: State<String>,
+    value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier,
     boxModifier: Modifier,
@@ -548,6 +720,7 @@ private fun CustomTextField(
     visualTransformation: (AnnotatedString) -> TransformedText = {
         TransformedText(it, OffsetMapping.Identity)
     },
+    isError: Boolean
 ) {
     Box(
         modifier = boxModifier
@@ -572,7 +745,7 @@ private fun CustomTextField(
             modifier = modifier
                 .fillMaxWidth()
                 .height(60.dp),
-            value = value.value,
+            value = value,
             onValueChange = onValueChange,
             label = {
                 Text(
@@ -587,7 +760,9 @@ private fun CustomTextField(
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             colors = TextFieldDefaults.outlinedTextFieldColors(
                 focusedBorderColor = GramsHair,
-                unfocusedBorderColor = GramsHair
+                unfocusedBorderColor = GramsHair,
+                errorBorderColor = ErrorColor,
+                errorLabelColor = JacarandaLight
             ),
             textStyle = Typography
                 .displayMedium
@@ -596,7 +771,9 @@ private fun CustomTextField(
                     lineHeight = 17.6.sp,
                     letterSpacing = 0.75.sp
                 ),
-            visualTransformation = visualTransformation
+            visualTransformation = visualTransformation,
+            isError = isError,
+
         )
     }
 }

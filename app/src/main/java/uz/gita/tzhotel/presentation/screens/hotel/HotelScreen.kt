@@ -59,9 +59,9 @@ class HotelScreen : AndroidScreen() {
     @Composable
     override fun Content() {
         val viewModel: HotelContract.ViewModel = getViewModel<HotelViewModel>()
-        val context = LocalContext.current
 
-            ScreenContent(uiState = viewModel.uiState.collectAsState(), onEventDispatcher = viewModel::onEventDispatcher)
+
+        ScreenContent(uiState = viewModel.uiState.collectAsState(), onEventDispatcher = viewModel::onEventDispatcher)
 
     }
 }
@@ -103,18 +103,32 @@ private fun ScreenContent(
             }
         }
         else {
-            HorizontalPager(
-                pageCount = 3,
-                state = pagerState,
+            Box(
                 modifier = Modifier
                     .padding(
                         top = 16.dp
                     )
                     .fillMaxWidth()
                     .height(300.dp),
-                reverseLayout = true
+
             ) {
-                PagerItem(imageUrl = uiState.value.hotelInfo?.image_urls?.get(it) ?: "")
+                HorizontalPager(
+                    pageCount = 3,
+                    state = pagerState,
+                    reverseLayout = true,
+                    modifier = Modifier
+                        .matchParentSize()
+                ) {
+                    PagerItem(imageUrl = uiState.value.hotelInfo?.image_urls?.get(it) ?: "")
+                }
+
+                DotsIndicator(
+                    totalDots = 3,
+                    selectedIndex = if (pagerState.currentPage == 2) 0 else if (pagerState.currentPage == 0) 2 else 1,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                )
+
             }
 
             Box(
@@ -323,34 +337,6 @@ private fun ScreenContent(
             )
         }
 
-
-        /*Box(
-            modifier = Modifier
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 80.dp,
-                    bottom = 20.dp
-                )
-                .height(60.dp)
-                .background(
-                    color = HadFieldBlue,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "К выбору номера",
-                style = Typography
-                    .displayMedium
-                    .copy(
-                        color = Color.White,
-                        lineHeight = 17.6.sp,
-                        letterSpacing = 0.1.sp
-                    )
-            )
-        }*/
     }
 }
 

@@ -6,7 +6,8 @@ import uz.gita.tzhotel.data.network.response.RoomsResponse
 interface NumbersContract {
 
     data class UiState(
-        val response:RoomsResponse? = null
+        val response:RoomsResponse? = null,
+        val isLoading:Boolean = false
     )
 
     interface Intent {

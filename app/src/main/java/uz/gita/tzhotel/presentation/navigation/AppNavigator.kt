@@ -11,4 +11,6 @@ interface AppNavigator {
     suspend fun navigateTo(screen:AppScreen)
     suspend fun replace(screen:AppScreen)
     suspend fun replaceAll(screen: AppScreen)
+
+    suspend fun replaceAll(screens:List<AppScreen>)
 }

@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import uz.gita.tzhotel.R
 import uz.gita.tzhotel.data.network.response.Room
+import uz.gita.tzhotel.presentation.screens.hotel.DotsIndicator
 import uz.gita.tzhotel.presentation.screens.hotel.PagerItem
 import uz.gita.tzhotel.ui.theme.BrilliantWhite
 import uz.gita.tzhotel.ui.theme.GramsHair
@@ -37,10 +40,36 @@ fun NumberItem(
     item:Room,
     onBlueButtonClick:()->Unit
 ){
+    var pagerState = rememberPagerState(initialPage = 3)
     Column {
-        HorizontalPager(pageCount = 3) {
-            PagerItem(imageUrl = item.image_urls[it])
+        Box(
+            modifier = Modifier
+                .padding(
+                    top = 16.dp
+                )
+                .fillMaxWidth()
+                .height(300.dp),
+
+            ) {
+            HorizontalPager(
+                pageCount = 3,
+                state = pagerState,
+                reverseLayout = true,
+                modifier = Modifier
+                    .matchParentSize()
+            ) {
+                PagerItem(imageUrl = item.image_urls[it])
+            }
+
+            DotsIndicator(
+                totalDots = 3,
+                selectedIndex = if (pagerState.currentPage == 2) 0 else if (pagerState.currentPage == 0) 2 else 1,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+            )
+
         }
+
 
         Text(
             text = item.name,
@@ -85,7 +114,7 @@ fun NumberItem(
                     start = 16.dp
                 )
                 .background(
-                    color= BrilliantWhite,
+                    color = BrilliantWhite,
                     shape = RoundedCornerShape(4.dp)
                 )
                 .padding(8.dp)
@@ -163,7 +192,8 @@ fun NumberItem(
 fun BlueButton(
     text:String,
     modifier: Modifier,
-    onClick:()->Unit
+    onClick:()->Unit,
+    infoIsLoading:Boolean = false
 ){
     Box(
         modifier = modifier
@@ -178,7 +208,7 @@ fun BlueButton(
             )
             .fillMaxWidth()
             .clickable {
-                       onClick.invoke()
+                onClick.invoke()
             },
         contentAlignment = Alignment.Center
     ) {
@@ -192,5 +222,17 @@ fun BlueButton(
                     letterSpacing = 0.1.sp
                 )
         )
+
+        if (infoIsLoading){
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(
+                        end = 24.dp
+                    )
+                    .size(36.dp)
+                .align(Alignment.CenterEnd),
+                color = Color.White
+            )
+        }
     }
 }

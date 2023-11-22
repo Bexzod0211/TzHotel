@@ -23,11 +23,17 @@ class NumbersViewModel @Inject constructor(
     }
 
     private fun loadData(){
+        uiState.update {
+            NumbersContract.UiState(isLoading = true)
+        }
         useCase.getRoomsList()
             .onEach {result ->
             result.onSuccess {response->
                 uiState.update {
-                    NumbersContract.UiState(response)
+                    NumbersContract.UiState(
+                        response =  response,
+                        isLoading = false
+                    )
                 }
             }
             result.onFailure {

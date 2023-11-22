@@ -46,5 +46,11 @@ class NavigationDispatcher @Inject constructor() : AppNavigator, NavigationHandl
         }
     }
 
+    override suspend fun replaceAll(screens: List<AppScreen>) {
+        navigate {
+            replaceAll(screens)
+        }
+    }
+
 
 }

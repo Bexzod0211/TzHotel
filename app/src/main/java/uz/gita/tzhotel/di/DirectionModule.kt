@@ -10,6 +10,8 @@ import uz.gita.tzhotel.presentation.screens.numbers.NumbersContract
 import uz.gita.tzhotel.presentation.screens.numbers.NumbersDirection
 import uz.gita.tzhotel.presentation.screens.order.BookContract
 import uz.gita.tzhotel.presentation.screens.order.BookDirection
+import uz.gita.tzhotel.presentation.screens.paid.PaidContract
+import uz.gita.tzhotel.presentation.screens.paid.PaidDirection
 import javax.inject.Singleton
 
 @Module
@@ -25,4 +27,7 @@ interface DirectionModule {
 
     @[Binds Singleton]
     fun bindOrderDirection(impl:BookDirection):BookContract.Direction
+
+    @[Binds Singleton]
+    fun bindPaidDirection(impl:PaidDirection):PaidContract.Direction
 }

@@ -8,6 +8,6 @@ class PaidDirection @Inject constructor(
     private val appNavigator: AppNavigator
 ) : PaidContract.Direction{
     override suspend fun backToHotelScreen() {
-        appNavigator.replace(HotelScreen())
+        appNavigator.back()
     }
 }
